@@ -44,7 +44,7 @@ services:
       # Use prefix 'http://' or 'https://' for the URL always.
       # Determine the actual IP using 'ifconfig' (Linux/Mac) or 'ipconfig' (Windows).
       - LABEL_STUDIO_URL=http://label-studio:8080
-      - LABEL_STUDIO_API_KEY=
+      - LABEL_STUDIO_API_KEY=288538dff828183c35d9a37d2cd944eec6e673b6
 
     ports:
       - "9090:9090"
