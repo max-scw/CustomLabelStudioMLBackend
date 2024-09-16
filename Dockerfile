@@ -4,6 +4,9 @@ ARG PYTHON_VERSION=3.12
 FROM python:${PYTHON_VERSION}-slim AS python-base
 ARG TEST_ENV
 
+# new default user
+RUN useradd -ms /bin/bash appuser
+
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
@@ -42,6 +45,11 @@ RUN --mount=type=cache,target=${PIP_CACHE_DIR},sharing=locked \
     fi
 
 COPY . .
+
+# set to non-root user
+USER root
+RUN chown -R appuser:appuser /home/app
+USER appuser
 
 EXPOSE 9090
 
