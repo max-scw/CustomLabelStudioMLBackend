@@ -48,7 +48,7 @@ COPY . .
 
 # set to non-root user
 USER root
-RUN chown -R appuser:appuser /home/app
+RUN chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 9090
