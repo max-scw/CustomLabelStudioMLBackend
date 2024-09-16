@@ -34,6 +34,19 @@ MinimalImageInferenceService
 |-- test_api.py  # if you want to test the code (see the original fork for this)
 ````
 
+## Connect Backend to Label Studio
+
+Go to a project on your Label Studio instance. Go to *Settings* > *Model*.
+
+![LabelStudioMLBackend_Settings_Model_new.jpg](docs%2FLabelStudioMLBackend_Settings_Model_new.jpg)
+
+Click on *Connect Model* and type in the url to your backend. If you are using the [docker-compose.yml](docker-compose.yml) file, the address is http://ml-backend:9090
+
+![LabelStudioMLBackend_Model_Connect_Model.jpg](docs%2FLabelStudioMLBackend_Model_Connect_Model.jpg)
+
+Click on *Validate and Save*. You'll see a green light and a new page if this was successful.
+
+![LabelStudioMLBackend_Model_Connected.jpg](docs%2FLabelStudioMLBackend_Model_Connected.jpg)
 
 ## License
 
