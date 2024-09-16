@@ -162,3 +162,5 @@ cython_debug/
 .idea/
 
 label-studio-ml-backend/
+my_ml_backend/
+models/

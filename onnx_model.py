@@ -5,6 +5,9 @@ from PIL import Image, ImageOps
 
 from typing import Tuple, Literal
 
+from utils import xyxy2xywh, xywh2xyxy
+
+
 def letterbox(
         img: Image.Image,
         new_shape: Tuple[int, int] = (640, 640),
@@ -62,27 +65,6 @@ def precision_to_type(precision: Literal["fp64", "fp32", "fp16", "int8"]) -> typ
         raise ValueError(f"Unknown precision: {precision}")
 
 
-def xywh2xyxy(xywh: np.ndarray) -> np.ndarray:
-    if not isinstance(xywh, np.ndarray):
-        xywh = np.asarray(xywh)
-    if len(xywh.shape) > 1:
-        xy0 = xywh[:, :2]
-        wh2 = xywh[:, 2:] / 2
-    else:
-        xy0 = xywh[:2]
-        wh2 = xywh[2:] / 2
-
-    return np.hstack((xy0 - wh2, xy0 + wh2))
-
-
-def xyxy2xywh(xyxy: np.ndarray) -> np.ndarray:
-    xy1, xy2 = np.split(xyxy, 2)
-    wh = (xy2 - xy1)
-    xy0 = xy1 + wh / 2
-
-    return np.hstack((xy0, wh))
-
-
 class ONNXModel:
     def __init__(
             self,
@@ -130,25 +112,23 @@ class ONNXModel:
         # Convert ONNX output into Label Studio's object detection format
         predictions = []
         for output in outputs[0]:  # Example bounding box, score, label output
-            bbox, label, score = output[1:5], int(output[5]), output[6]
+            bbox, class_id, score = output[1:5], int(output[5]), output[6]
             # make relative
             if any(bbox > 1):
-                bbox = (bbox / (self.input_shape * 2))
+                bbox = (bbox / (self.input_shape[::-1] * 2))
             # convert to corner-point-format
             if self.bbox_format == "xywh":
                 bbox = xywh2xyxy(bbox)
 
-            predictions.append({
-                "label": label,
-                "score": score,
-                "bbox": bbox.tolist()
-            })
+            predictions.append(
+                (class_id, score, bbox.tolist())
+            )
         return predictions
 
 
 if __name__ == "__main__":
     mdl = ONNXModel(
-        "20240905_CRUplus_crop_YOLOv7tiny.onnx",
+        "../models/20240905_CRUplus_crop_YOLOv7tiny.onnx",
         precision="fp32",
         input_shape=(544, 640),
     )

@@ -1,0 +1,24 @@
+# Exclude everything
+**
+
+# Include Dockerfile and docker-compose for reference (optional, decide based on your use case)
+!Dockerfile
+!docker-compose.yml
+
+# Include Python application files
+!*.py
+!utils
+
+# Include requirements files
+!requirements*.txt
+
+# Include script
+!*.sh
+
+# Include LICENSE + README
+!LICENSE
+!README.md
+
+# Exclude specific requirements if necessary
+requirements-test.txt (Uncomment if you decide to exclude this)
+test_api.py
