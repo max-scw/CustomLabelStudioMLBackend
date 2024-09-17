@@ -9,6 +9,8 @@ The official repository from HumanSignal / Label Studio can be accessed under [H
 Use docker or the docker compose plugin with [docker-compose.yml](docker-compose.yml).
 The container uses [gunicorn](https://gunicorn.org/), Python web server for unix, to spinn up a [Flask](https://flask.palletsprojects.com/en/3.0.x/) server that provides a REST api. Label Studio in turn queries this api to get predictions for tasks.
 
+Docker container are released on [DockerHub/maxscw/labelstudio-ml-backend](https://hub.docker.com/r/maxscw/labelstudio-ml-backend).
+
 ## Project Structure
 
 The customized code can be found in [model.py](model.py) (and the corresponding files: [onnx_model.py](onnx_model.py), [utils](utils)).

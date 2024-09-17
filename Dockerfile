@@ -47,9 +47,12 @@ RUN --mount=type=cache,target=${PIP_CACHE_DIR},sharing=locked \
 COPY . .
 
 # set to non-root user
-USER root
-RUN chown -R appuser:appuser /app
-USER appuser
+#RUN mkdir /data
+#USER root
+#RUN chown -R appuser:appuser /app
+#RUN chown -R appuser:appuser /tmp
+#RUN chown -R appuser:appuser /data
+#USER appuser
 
 EXPOSE 9090
 
