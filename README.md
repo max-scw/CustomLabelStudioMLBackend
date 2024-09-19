@@ -11,6 +11,14 @@ The container uses [gunicorn](https://gunicorn.org/), Python web server for unix
 
 Docker container are released on [DockerHub/maxscw/labelstudio-ml-backend](https://hub.docker.com/r/maxscw/labelstudio-ml-backend).
 
+One can specify multiple models for different projects by dictionaries that map the project ID to the model names. The same applies for the environment variables INPUT_SHAPE and PRECISION.
+````shell
+- MODEL_NAME={1:"model1.onnx", 3:"model2.onnx"}  # specify multiple models
+- PRECISION="fp32"  # all models share the same precision here
+- INPUT_SHAPE={1:(640,640), 3:(544,640)}  # each model expects a different shape of the input image
+````
+
+
 ## Project Structure
 
 The customized code can be found in [model.py](model.py) (and the corresponding files: [onnx_model.py](onnx_model.py), [utils](utils)).

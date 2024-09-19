@@ -1,8 +1,10 @@
-from typing import List, Dict, Optional
 from label_studio_ml.model import LabelStudioMLBase
 from label_studio_ml.response import ModelResponse
 
 from PIL import Image
+from pathlib import Path
+
+from typing import Union, Dict, List, Optional, Any
 
 from utils import get_env_variable, setup_logging
 from onnx_model import ONNXModel
@@ -12,21 +14,66 @@ logger = setup_logging(__name__)
 
 
 class NewModel(LabelStudioMLBase):
+    model: Union[ONNXModel, Dict[int, ONNXModel]]
+
     def setup(self):
         """Configure any parameters of your model here"""
         self.set("model_version", "0.0.1")
 
-        model_path = get_env_variable("MODEL_PATH", "model.onnx")
+        model_name = get_env_variable("MODEL_NAME", "model.onnx")
+        model_dir = Path(get_env_variable("MODEL_DIR", "/models"))
         precision = get_env_variable("MODEL_PRECISION", "fp32")
         input_shape = get_env_variable("MODEL_INPUT_SHAPE", (640, 640))
-        logger.debug(f"model_path={model_path}, precision={precision}, input_shape={input_shape}")
+
+        logger.debug(f"model_dir={model_dir}, model_name={model_name}, precision={precision}, input_shape={input_shape}")
 
         # setup ONNX session
-        self.model = ONNXModel(
-            model_path=model_path,
-            precision=precision,
-            input_shape=input_shape,
-        )
+        if isinstance(model_name, str):
+            self.model = ONNXModel(
+                model_path=model_dir / model_name,
+                precision=precision,
+                input_shape=input_shape,
+            )
+
+        elif isinstance(model_name, dict):
+
+            self.model = dict()
+            for ky, vl in model_name.items():
+                _model_path = model_dir / vl
+                _precision = self._get_variable(precision, ky, "model precision")
+                _input_shape = self._get_variable(input_shape, ky, "input shape")
+
+                logger.debug(f"Initial ONNX session for model_path={_model_path}, precision={_precision}, input_shape={_input_shape} with key={ky} (type {type(ky)})")
+                self.model[ky] = ONNXModel(
+                    model_path=_model_path,
+                    precision=_precision,
+                    input_shape=_input_shape,
+                )
+        else:
+            raise TypeError(f"Expecting path to model file or dictionary to multiple model files as input but MODEL_NAME was {model_name} (type={type(model_name)})")
+
+        logger.info(f"Session(s) {self.model} created.")
+
+    @staticmethod
+    def _get_variable(
+            variable: Union[Any, Dict[int, Any]],
+            project_id: int,
+            description: str = None,
+    ):
+        logger.debug(f"get_variable(variable={variable}, project_id={project_id}, description={description})")
+        # cast to integer
+        project_id = int(project_id)
+        # get variable
+        if isinstance(variable, dict):
+            if project_id in variable:
+                return variable[project_id]
+            else:
+                raise Exception(f"No {description} for project {project_id} (type: {type(project_id)}).")
+        elif isinstance(variable, (str, int, tuple, ONNXModel)):
+             return variable
+        else:
+            raise Exception(f"No {description} for project {project_id}. Input was {variable} (type {type(variable)})")
+
 
     def predict(self, tasks: List[Dict], context: Optional[Dict] = None, **kwargs) -> ModelResponse:
         """ Write your inference logic here
@@ -44,12 +91,11 @@ class NewModel(LabelStudioMLBase):
         Parsed JSON Label config: {self.parsed_label_config}
         Extra params: {self.extra_params}''')
 
+        # get model
+        model = self._get_variable(self.model, self.project_id, "Model")
 
         predictions = []
         for task in tasks:
-            # Load the image from the task's input
-            # image_data = task['data']['image']  # Image URL or base64-encoded image
-
             # Resource downloading from Label Studio instance requires the
             # env vars LABEL_STUDIO_URL and LABEL_STUDIO_API_KEY being set
             path = self.get_local_path(task["data"]["image"], task_id=task["id"])
@@ -60,7 +106,7 @@ class NewModel(LabelStudioMLBase):
             logger.debug(f"Image: {image}")
 
             # Predict bounding boxes using the ONNX model
-            results = self.model.predict(image)
+            results = model.predict(image)
             logger.debug(f"Model results: {results}")
 
             # Convert model predictions to Label Studio format
