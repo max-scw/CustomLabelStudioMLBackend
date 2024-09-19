@@ -80,6 +80,9 @@ class ONNXModel:
         self.input_shape = input_shape
         self.bbox_format = bbox_format
 
+    def __repr__(self) -> str:
+        return f"ONNXModel({self.model_path}, precision={self.precision}, input_shape={self.input_shape}, bbox_format={self.bbox_format})"
+
     def predict(self, image):
         # Preprocess the image (resize, normalize, etc.)
         input_tensor = self.preprocess_image(image)
