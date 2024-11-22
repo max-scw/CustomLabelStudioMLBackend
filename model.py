@@ -73,7 +73,7 @@ class NewModel(LabelStudioMLBase):
                 return variable[project_id]
             else:
                 raise Exception(f"No {description} for project {project_id} (type: {type(project_id)}).")
-        elif isinstance(variable, (str, int, tuple, ONNXModel)):
+        elif isinstance(variable, (str, int, float, tuple, ONNXModel)):
              return variable
         else:
             raise Exception(f"No {description} for project {project_id}. Input was {variable} (type {type(variable)})")
