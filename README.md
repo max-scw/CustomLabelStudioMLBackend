@@ -16,8 +16,10 @@ One can specify multiple models for different projects by dictionaries that map 
 - MODEL_NAME={1:"model1.onnx", 3:"model2.onnx"}  # specify multiple models
 - PRECISION="fp32"  # all models share the same precision here
 - INPUT_SHAPE={1:(640,640), 3:(544,640)}  # each model expects a different shape of the input image
+- TH_SCORE=0.6  # all models use the same minimal score (takes only effect for YOLOv10 models)
 ````
 
+Works for ONNX models that return the same matrices as YOLOv7 and YOLOv10.
 
 ## Project Structure
 

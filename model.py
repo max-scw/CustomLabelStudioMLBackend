@@ -24,6 +24,7 @@ class NewModel(LabelStudioMLBase):
         model_dir = Path(get_env_variable("MODEL_DIR", "/models"))
         precision = get_env_variable("MODEL_PRECISION", "fp32")
         input_shape = get_env_variable("MODEL_INPUT_SHAPE", (640, 640))
+        th_score = get_env_variable("MODEL_TH_SCORE", 0.5)
 
         logger.debug(f"model_dir={model_dir}, model_name={model_name}, precision={precision}, input_shape={input_shape}")
 
@@ -33,6 +34,7 @@ class NewModel(LabelStudioMLBase):
                 model_path=model_dir / model_name,
                 precision=precision,
                 input_shape=input_shape,
+                th_score=th_score
             )
 
         elif isinstance(model_name, dict):
@@ -42,12 +44,14 @@ class NewModel(LabelStudioMLBase):
                 _model_path = model_dir / vl
                 _precision = self._get_variable(precision, ky, "model precision")
                 _input_shape = self._get_variable(input_shape, ky, "input shape")
+                _th_score = self._get_variable(th_score, ky, "threshold score")
 
                 logger.debug(f"Initial ONNX session for model_path={_model_path}, precision={_precision}, input_shape={_input_shape} with key={ky} (type {type(ky)})")
                 self.model[ky] = ONNXModel(
                     model_path=_model_path,
                     precision=_precision,
                     input_shape=_input_shape,
+                    th_score=_th_score
                 )
         else:
             raise TypeError(f"Expecting path to model file or dictionary to multiple model files as input but MODEL_NAME was {model_name} (type={type(model_name)})")

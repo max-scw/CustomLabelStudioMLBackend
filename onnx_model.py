@@ -72,6 +72,7 @@ class ONNXModel:
             precision: Literal["fp64", "fp32", "fp16", "int8"] = "fp32",
             input_shape: Tuple[int, int] = (640, 640),
             bbox_format: Literal["xywh", "xyxy"] = "xyxy",
+            th_score: float = 0.5
     ):
         self.model_path = model_path
         self.session = ort.InferenceSession(self.model_path)
@@ -79,6 +80,7 @@ class ONNXModel:
         self.precision = precision_to_type(precision)
         self.input_shape = input_shape
         self.bbox_format = bbox_format
+        self.th_score = th_score
 
     def __repr__(self) -> str:
         return f"ONNXModel({self.model_path}, precision={self.precision}, input_shape={self.input_shape}, bbox_format={self.bbox_format})"
@@ -113,27 +115,48 @@ class ONNXModel:
 
     def postprocess(self, outputs):
         # Convert ONNX output into Label Studio's object detection format
-        predictions = []
-        for output in outputs[0]:  # Example bounding box, score, label output
-            bbox, class_id, score = output[1:5], int(output[5]), output[6]
-            # make relative
-            if any(bbox > 1):
-                bbox = (bbox / (self.input_shape[::-1] * 2))
-            # convert to corner-point-format
-            if self.bbox_format == "xywh":
-                bbox = xywh2xyxy(bbox)
+        output = outputs[0]
 
-            predictions.append(
-                (class_id, score, bbox.tolist())
-            )
+        if len(output.shape) == 3:
+            output = output[0]
+
+        if output.shape[1] == 7:
+            # YOLOv7
+            idx_bbx = 1
+            idx_cls = 5
+            idx_scr = 6
+        elif output.shape[1] == 6:
+            # YOLOv10
+            idx_bbx = 0
+            idx_cls = 5
+            idx_scr = 4
+        else:
+            raise ValueError(f"Unexpected output shape: {output.shape}")
+
+        scores = output[:, idx_scr]
+        lg = scores > self.th_score
+        scores = scores[lg]
+
+        bboxs, class_ids = output[lg, idx_bbx:idx_bbx + 4], output[lg, idx_cls].astype(int)
+
+        # make relative
+        if (bboxs > 1).any():
+            bboxs = (bboxs / (self.input_shape[::-1] * 2))
+
+        # convert to corner-point-format
+        if self.bbox_format == "xywh":
+            bboxs = xywh2xyxy(bboxs)
+
+        predictions = [(cls, scr, bbx.tolist()) for cls, scr, bbx in zip(class_ids, scores, bboxs)]
         return predictions
 
 
 if __name__ == "__main__":
     mdl = ONNXModel(
-        "../models/20240905_CRUplus_crop_YOLOv7tiny.onnx",
+        model_path="./models/20241026_CRU1_2_YOLOv7tiny.onnx",
+        # model_path="./models/20241107_CRU1_2_YOLOv10n.onnx",
         precision="fp32",
-        input_shape=(544, 640),
+        input_shape=(640, 640),
     )
 
     image = Image.open("../BaslerCameraAdapter/test_images/20240813_120110.jpg")
