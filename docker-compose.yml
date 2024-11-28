@@ -36,7 +36,8 @@ services:
       - MODEL_DIR=/data/models
       - MODEL_PATH=/data/models/model.onnx
       - MODEL_PRECISION=fp32
-      - MODEL_INPUT_SHAPE=(544, 640)
+      - MODEL_INPUT_SHAPE=(640, 640)
+      - MODEL_VERSION=0.0.1
 
       # Specify the Label Studio URL and API key to access
       # uploaded, local storage and cloud storage files.
