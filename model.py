@@ -18,7 +18,7 @@ class NewModel(LabelStudioMLBase):
 
     def setup(self):
         """Configure any parameters of your model here"""
-        self.set("model_version", get_env_variable("MODEL_VERSION", "0.0.1"))
+        self.set("MODEL_VERSION", "0.0.1")
 
         model_name = get_env_variable("MODEL_NAME", "model.onnx")
         model_dir = Path(get_env_variable("MODEL_DIR", "/models"))
